@@ -33,7 +33,7 @@ class DeribitClient:
         self.client_secret = client_secret
         self.is_testnet=is_testnet
         auth=self.authenticate()
-        self.access_token=auth["result"]["access_token"]
+        self.access_token=auth["access_token"]
         
     def authenticate(self):                
         timestamp = round(datetime.now().timestamp() * 1000)
@@ -65,13 +65,20 @@ class DeribitClient:
           "params" : params
         }
         response=run_async_call(msg,self.is_testnet) 
-        return(response)
+        print(response,"RESPONSE")
+        if "result" in response:
+            return response["result"]
+        elif "message" in response:
+            return response["message"]
+        else:
+            return "Ok"
+        
 
-
-    def limit_buy(self,price,amount,post_only=False):
+    def buy(self,price,amount,post_only=False,instrument="BTC-PERPETUAL"):
+        """Limit buy"""
         params={
             "access_token" : self.access_token,
-            "instrument_name" : "BTC-PERPETUAL",
+            "instrument_name" : instrument,
             "amount" : amount,
             "price": price,
             "type" : "limit",
@@ -82,10 +89,10 @@ class DeribitClient:
         response=self.request("private/buy",params)
         return(response)
 
-    def market_buy(self,amount):
+    def market_buy(self,amount,instrument="BTC-PERPETUAL"):
         params={
             "access_token" : self.access_token,
-            "instrument_name" : "BTC-PERPETUAL",
+            "instrument_name" : instrument,
             "amount" : amount,
             "type" : "market",
             "label" : "algoorder"
@@ -93,10 +100,11 @@ class DeribitClient:
         response=self.request("private/buy",params)
         return(response)
 
-    def limit_sell(self,price,amount,post_only=False):
+    def sell(self,price,amount,post_only=False,instrument="BTC-PERPETUAL"):
+        """Limit sell"""
         params={
             "access_token" : self.access_token,
-            "instrument_name" : "BTC-PERPETUAL",
+            "instrument_name" : instrument,
             "amount" : amount,
             "price": price,
             "type" : "limit",
@@ -107,10 +115,10 @@ class DeribitClient:
         response=self.request("private/sell",params)
         return(response)
 
-    def market_sell(self,amount):
+    def market_sell(self,amount,instrument="BTC-PERPETUAL"):
         params={
             "access_token" : self.access_token,
-            "instrument_name" : "BTC-PERPETUAL",
+            "instrument_name" : instrument,
             "amount" : amount,
             "type" : "market",
             "label" : "algoorder"
@@ -155,5 +163,25 @@ class DeribitClient:
                   "instrument_name":instrument,
                   }
         return self.request("private/get_position", params)
+
+
+    def get_summary(self, instrument="BTC-PERPETUAL"):
+        params = {"instrument_name":instrument,
+                  }
+        return self.request("/public/get_book_summary_by_instrument", params)
+
+    def get_account_summary(self, currency="BTC"):
+        params = {"access_token" : self.access_token,
+                  "currency":currency,
+                  }
+        return self.request("/private/get_account_summary", params)
+
+    def get_last_trades(self, instrument="BTC-PERPETUAL",count=10):
+        params = {"instrument_name":instrument,
+                  "count":count
+                  }
+        return self.request("/public/get_last_trades_by_instrument", params)
+        
+        
 
 
