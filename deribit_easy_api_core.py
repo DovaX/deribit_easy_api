@@ -34,8 +34,9 @@ class DeribitClient:
         self.client_id = client_id
         self.client_secret = client_secret
         self.is_testnet=is_testnet
-        auth=self.authenticate()
-        self.access_token=auth["access_token"]
+        
+        self.refresh_token=None
+        self.authenticate()
         
     def authenticate(self):                
         timestamp = round(datetime.now().timestamp() * 1000)
@@ -56,7 +57,13 @@ class DeribitClient:
             "data" : data,
             "scope":"trade:read_write session:mysessionname"
           }
+        if self.refresh_token is not None:
+            
+            params["refresh_token"]=self.refresh_token,
         response=self.request("public/auth",params=params)
+        
+        self.access_token=response["access_token"]
+        self.refresh_token=response["refresh_token"]
         return(response)
 
     def request(self,method,params):
@@ -173,6 +180,7 @@ class DeribitClient:
 
     def get_summary(self, instrument="BTC-PERPETUAL"):
         params = {"instrument_name":instrument,
+                  
                   }
         return self.request("/public/get_book_summary_by_instrument", params)
 
