@@ -28,7 +28,9 @@ def run_async_call(msg,is_testnet=False):
     return(response)     
 
 class DeribitClient:
+    
     def __init__(self,client_id,client_secret,is_testnet=False):
+        self.number_of_requests=0
         self.client_id = client_id
         self.client_secret = client_secret
         self.is_testnet=is_testnet
@@ -65,13 +67,17 @@ class DeribitClient:
           "params" : params
         }
         response=run_async_call(msg,self.is_testnet) 
-        print(response,"RESPONSE")
         if "result" in response:
             return response["result"]
         elif "message" in response:
             return response["message"]
         else:
             return "Ok"
+        self.number_of_requests+=1
+        if self.number_of_requests%100==99:
+            auth=self.authenticate()
+            self.access_token=auth["access_token"]
+        
         
 
     def buy(self,price,amount,post_only=False,instrument="BTC-PERPETUAL"):
