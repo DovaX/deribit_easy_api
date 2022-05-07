@@ -21,14 +21,14 @@ async def call_api(msg,is_testnet=False):
             return(json_par)
  
 def run_async_call(msg,is_testnet=False):
-    try:
-        response = asyncio.get_event_loop().run_until_complete(call_api(json.dumps(msg),is_testnet))
-    except Exception as e:
-        print("Error while accessing API",e)
+    #try:
+    
+    response = asyncio.get_event_loop().run_until_complete(call_api(json.dumps(msg),is_testnet))
+    #except Exception as e:
+    #    print("Error while accessing API",e)
     return(response)     
 
-class DeribitClient:
-    
+class DeribitClient:    
     def __init__(self,client_id,client_secret,is_testnet=False):
         self.number_of_requests=0
         self.client_id = client_id
@@ -66,7 +66,7 @@ class DeribitClient:
         self.refresh_token=response["refresh_token"]
         return(response)
 
-    def request(self,method,params):
+    def request(self,method,params,refresh_auth_token_period=100):
         msg = {
           "jsonrpc" : "2.0",
           "id" : 1,
@@ -74,16 +74,20 @@ class DeribitClient:
           "params" : params
         }
         response=run_async_call(msg,self.is_testnet) 
+        
+        self.number_of_requests+=1
+        if self.number_of_requests%refresh_auth_token_period==(refresh_auth_token_period-1):
+            auth=self.authenticate()
+            if "access_token" in auth:
+                self.access_token=auth["access_token"]
+        
         if "result" in response:
             return response["result"]
         elif "message" in response:
             return response["message"]
         else:
             return "Ok"
-        self.number_of_requests+=1
-        if self.number_of_requests%100==99:
-            auth=self.authenticate()
-            self.access_token=auth["access_token"]
+        
         
         
 
