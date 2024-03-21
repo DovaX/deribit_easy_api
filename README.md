@@ -2,7 +2,7 @@
 A wrapper around Deribit cryptocurrency exchange API to make setup easier and async orders running as oneliners
 
 
-# usage
+# Usage
 ```python
 import deribit_easy_api.deribit_easy_api_core as derapi
 
